@@ -26,7 +26,7 @@ export class UserService {
 		return databaseUser;
 	}
 
-	public encryptPassword(password: string, databaseUser?: User) {
+	private encryptPassword(password: string, databaseUser?: User) {
 
 		if (databaseUser && password === databaseUser.password) {
 
