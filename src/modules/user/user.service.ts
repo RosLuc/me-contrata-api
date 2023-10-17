@@ -18,7 +18,7 @@ export class UserService {
 		user.password = this.encryptPassword(user.password);
 
 		const userToCreate = this.userRepository.create(user);
-		console.log({userToCreate})
+
 		const databaseUser = await this.userRepository.save(userToCreate);
 
 		delete databaseUser.password;
