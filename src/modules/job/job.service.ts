@@ -14,11 +14,11 @@ export class JobService {
 	) {}
 
 	public async create(job: IJob) {
-
-		const databaseCandidate = await this.candidateService.findOneById(job.candidate_id);
+		const databaseCandidate = await this.candidateService.findOneById(
+			job.candidate_id,
+		);
 
 		if (!databaseCandidate) {
-
 			throw new NotFoundException('Candidato não encontrado');
 		}
 
@@ -28,17 +28,33 @@ export class JobService {
 	}
 
 	public getAll(options: IGetAllOptions) {
+		const { category, orderBy, order = 'ASC' } = options;
+		const findOptions = {
+			where: {},
+			order: {}
+		};
 
-		return this.jobRepository.find({
-			where: {
-				category: options.category ? options.category : undefined
-			},
-			order: options.orderBy ? { [options.orderBy]: options.order || 'ASC' } : undefined
-		});
+		if (category) {
+
+			findOptions.where = {
+				category
+			}
+		}
+
+		if (orderBy && order) {
+
+			findOptions.order = {
+				[orderBy]: order
+			}
+		}
+
+		return this.jobRepository.find(findOptions);
 	}
 
 	public getOneById(id: number) {
-
-		return this.jobRepository.findOne({ where: { id }, relations: ['candidate'] });
+		return this.jobRepository.findOne({
+			where: { id },
+			relations: ['candidate'],
+		});
 	}
 }
