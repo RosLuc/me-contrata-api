@@ -7,14 +7,11 @@ import { CandidateController } from './candidate.controller';
 
 @Module({
   imports: [
-    UserModule,
-    TypeOrmModule.forFeature([Candidate])
+    TypeOrmModule.forFeature([Candidate]),
+    UserModule
   ],
   controllers: [CandidateController],
   providers: [CandidateService],
-  exports: [
-    TypeOrmModule,
-    CandidateService
-  ]
+  exports: [CandidateService]
 })
 export class CandidateModule {}

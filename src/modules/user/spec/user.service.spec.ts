@@ -26,8 +26,9 @@ describe('UserService', () => {
 			],
 		}).compile();
 
-		userService = module.get<UserService>(UserService);
+		
 		userRepository = module.get<Repository<User>>(USER_REPOSITORY_TOKEN);
+		userService = module.get<UserService>(UserService);
 	});
 
 	it('user service should be defined', () => {
