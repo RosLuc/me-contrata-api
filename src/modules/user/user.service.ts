@@ -26,12 +26,7 @@ export class UserService {
 		return databaseUser;
 	}
 
-	private encryptPassword(password: string, databaseUser?: User) {
-
-		if (databaseUser && password === databaseUser.password) {
-
-			return password;
-		}
+	private encryptPassword(password: string) {
 
 		const salt = bcrypt.genSaltSync(10);
 
