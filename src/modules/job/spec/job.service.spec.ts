@@ -189,7 +189,7 @@ describe('JobService', () => {
 			});
 		});
 
-		it('errored creating job', async () => {
+		it('errored updating job', async () => {
 			const firstInput = 1
 			const secondInput = {
 				name: 'novo job',
