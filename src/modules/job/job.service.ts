@@ -27,25 +27,40 @@ export class JobService {
 		return this.jobRepository.save(jobToCreate);
 	}
 
+	public async update(jobId: number, job: IJob) {
+		const databaseJob = await this.jobRepository.findOne({
+			where: { id: jobId },
+		});
+
+		if (!databaseJob) {
+			throw new NotFoundException('Job não encontrado');
+		}
+
+		const jobToUpdate = this.jobRepository.create({
+			...databaseJob,
+			...job,
+		});
+
+		return this.jobRepository.save(jobToUpdate);
+	}
+
 	public getAll(options: IGetAllOptions) {
 		const { category, orderBy, order = 'ASC' } = options;
 		const findOptions = {
 			where: {},
-			order: {}
+			order: {},
 		};
 
 		if (category) {
-
 			findOptions.where = {
-				category
-			}
+				category,
+			};
 		}
 
 		if (orderBy && order) {
-
 			findOptions.order = {
-				[orderBy]: order
-			}
+				[orderBy]: order,
+			};
 		}
 
 		return this.jobRepository.find(findOptions);
@@ -56,5 +71,15 @@ export class JobService {
 			where: { id },
 			relations: ['candidate'],
 		});
+	}
+
+	public async removeById(id: number) {
+		const databaseJob = await this.jobRepository.findOne({ where: { id } });
+
+		if (!databaseJob) {
+			throw new NotFoundException('Job não encontrado');
+		}
+
+		await this.jobRepository.remove([databaseJob]);
 	}
 }

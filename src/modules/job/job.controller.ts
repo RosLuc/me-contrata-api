@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { IGetAllOptions, IJob } from './Job.interface';
 import { JobService } from './job.service';
 
@@ -13,6 +13,13 @@ export class JobController {
 		return this.jobService.create(job);
 	}
 
+	
+	@Put('/:id')
+	public async update(@Param('id') id: number, @Body() job: IJob) {
+
+		return this.jobService.update(id, job);
+	}
+
 	@Get()
 	public async getAll(@Query() queryParams: IGetAllOptions) {
 
@@ -23,5 +30,11 @@ export class JobController {
 	public async getOne(@Param('id') id: number) {
 
 		return this.jobService.getOneById(id);
+	}
+
+	@Delete('/:id')
+	public async delete(@Param('id') id: number) {
+
+		return this.jobService.removeById(id);
 	}
 }
