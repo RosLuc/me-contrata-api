@@ -5,6 +5,7 @@ import { CandidateService } from '../candidate.service';
 import { Candidate } from '../../../core/ententies/candidate.entity';
 import { UserService } from '../../user/user.service';
 import { UserType } from '../../user/user.interface';
+import { NotFoundException } from '@nestjs/common';
 
 describe('CandidateService', () => {
 	let candidateService: CandidateService;
@@ -42,7 +43,8 @@ describe('CandidateService', () => {
 					useValue: {
 						create: jest.fn(),
 						save: jest.fn(),
-						findOne: jest.fn()
+						findOne: jest.fn(),
+						remove: jest.fn(),
 					},
 				},
 			],
@@ -114,6 +116,70 @@ describe('CandidateService', () => {
 		});
 	});
 
+	describe('update', () => {
+		const createdAt = new Date('2023-10-13');
+		const DATABASE_JOB = {
+			id: 1,
+			name: 'me contrata',
+			bio: 'Maior plataforma',
+			birth_date: new Date('2023-10-13'),
+			created_at: new Date('2023-10-13'),
+			updated_at: new Date('2023-10-13'),
+		}
+
+		beforeEach(() => {
+			jest.spyOn(candidateRepository, 'findOne').mockResolvedValue(DATABASE_JOB as Candidate);
+			jest.spyOn(candidateRepository, 'create').mockImplementation((object) => {
+				return {
+					...object,
+					id: 1,
+					created_at: createdAt,
+					updated_at: createdAt,
+				} as Candidate;
+			});
+			jest.spyOn(candidateRepository, 'save').mockImplementation(
+				(object: Candidate) => Promise.resolve(object),
+			);
+		});
+
+		it('successfully updating job', async () => {
+			const firstInput = 1;
+			const secondInput = {
+				name: 'Bruce',
+				bio: 'Maior plataforma',
+				birth_date: createdAt,
+			};
+			const expected = {
+				...secondInput,
+				id: 1,
+				created_at: createdAt,
+				updated_at: createdAt,
+			};
+
+			expect(candidateService.update(firstInput, secondInput)).resolves.toEqual(expected);
+			expect(candidateRepository.findOne).toBeCalledWith({
+				where: { id: firstInput },
+			});
+		});
+
+		it('errored creating job', async () => {
+			const firstInput = 1;
+			const secondInput = {
+				name: 'Bruce',
+				bio: 'Maior plataforma',
+				birth_date: createdAt,
+			};
+			const expected = new NotFoundException('Candidato não encontrado');
+
+			jest.spyOn(candidateRepository, 'findOne').mockResolvedValue(null);
+
+			expect(candidateService.update(firstInput, secondInput)).rejects.toThrowError(expected);
+			expect(candidateRepository.findOne).toBeCalledWith({
+				where: { id: firstInput },
+			});
+		});
+	});
+
 	describe('findOneById', () => {
 		const createdAt = new Date('2023-10-13');
 
@@ -159,6 +225,43 @@ describe('CandidateService', () => {
 
 			expect(candidateService.findOneById(input)).resolves.toEqual(expected);
 			expect(candidateRepository.findOne).toBeCalledWith({ where: { id: 1 } });
+		});
+	});
+
+	describe('removeById', () => {
+		const DATABASE_JOB = {
+			id: 1,
+			name: 'me contrata',
+			bio: 'Maior plataforma',
+			birth_date: new Date('2023-10-13'),
+			created_at: new Date('2023-10-13'),
+			updated_at: new Date('2023-10-13'),
+		}
+
+		beforeEach(() => {
+			jest.spyOn(candidateRepository, 'findOne').mockResolvedValue(DATABASE_JOB as Candidate)
+			jest.spyOn(candidateRepository, 'remove').mockResolvedValue(DATABASE_JOB as Candidate);
+		});
+
+		it('successfully delete candidate', async () => {
+			const input = 1;
+
+			expect(candidateService.delete(input)).resolves.toBeUndefined();
+			expect(candidateRepository.findOne).toBeCalledWith({
+				where: { id: input },
+			});
+		});
+
+		it('erroed delete job', async () => {
+			const input = 1;
+			const expected = new NotFoundException('Candidato não encontrado');
+
+			jest.spyOn(candidateRepository, 'findOne').mockResolvedValue(null);
+
+			expect(candidateService.delete(input)).rejects.toThrowError(expected);
+			expect(candidateRepository.findOne).toBeCalledWith({
+				where: { id: input },
+			});
 		});
 	});
 });
