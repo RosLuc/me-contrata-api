@@ -7,6 +7,15 @@ import { CandidateService } from '../../candidate/candidate.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('JobService', () => {
+
+	const repositoryMock = {
+		create: jest.fn(),
+		save: jest.fn(),
+		find: jest.fn(),
+		findOne: jest.fn(),
+		remove: jest.fn()
+	}
+
 	let jobService: JobService;
 	let candidateService: CandidateService;
 	let jobRepository: Repository<Job>;
@@ -44,6 +53,7 @@ describe('JobService', () => {
 						save: jest.fn(),
 						find: jest.fn(),
 						findOne: jest.fn(),
+						remove: jest.fn()
 					},
 				},
 			],
@@ -127,6 +137,79 @@ describe('JobService', () => {
 		});
 	});
 
+	describe('update', () => {
+		const createdAt = new Date('2023-10-13');
+		const DATABASE_JOB = {
+			id: 1,
+			name: 'me contrata',
+			price: 100,
+			description: 'descrição',
+			category: 'dev',
+			status: 'aberta',
+			candidate_id: 1,
+			created_at: createdAt,
+			updated_at: createdAt,
+		};
+
+		beforeEach(() => {
+			jest.spyOn(jobRepository, 'findOne').mockResolvedValue(DATABASE_JOB as Job);
+			jest.spyOn(jobRepository, 'create').mockImplementation((object) => {
+				return {
+					...object,
+					id: 1,
+					created_at: createdAt,
+					updated_at: createdAt,
+				} as Job;
+			});
+			jest.spyOn(jobRepository, 'save').mockImplementation(
+				(object: Job) => Promise.resolve(object),
+			);
+		});
+
+		it('successfully updating job', async () => {
+			const firstInput = 1
+			const secondInput = {
+				name: 'novo job',
+				price: 120,
+				description: 'descrição',
+				category: 'dev',
+				status: 'aberta',
+				candidate_id: 1,
+			};
+			const expected = {
+				...secondInput,
+				id: 1,
+				created_at: createdAt,
+				updated_at: createdAt,
+			};
+
+			expect(jobService.update(firstInput, secondInput)).resolves.toEqual(expected);
+			expect(jobRepository.findOne).toBeCalledWith({
+				where: { id: firstInput },
+			});
+		});
+
+		it('errored creating job', async () => {
+			const firstInput = 1
+			const secondInput = {
+				name: 'novo job',
+				price: 120,
+				description: 'descrição',
+				category: 'dev',
+				status: 'aberta',
+				candidate_id: 1,
+			};
+			const expected = new NotFoundException('Job não encontrado');
+
+			jest.spyOn(jobRepository, 'findOne').mockResolvedValue(null);
+
+			expect(jobService.update(firstInput, secondInput)).rejects.toThrowError(expected);
+			expect(jobRepository.findOne).toBeCalledWith({
+				where: { id: firstInput },
+			});
+		});
+	});
+
 	describe('getAll', () => {
 		const createdAt = new Date('2023-10-13');
 
@@ -153,7 +236,7 @@ describe('JobService', () => {
 					candidate_id: 1,
 					created_at: createdAt,
 					updated_at: createdAt,
-				} as Job
+				} as Job,
 			]);
 			jest.spyOn(jobRepository, 'findOne').mockResolvedValue({
 				id: 1,
@@ -169,7 +252,6 @@ describe('JobService', () => {
 		});
 
 		it('successfully find all job', async () => {
-
 			const input = {};
 			const expected = [
 				{
@@ -193,22 +275,21 @@ describe('JobService', () => {
 					candidate_id: 1,
 					created_at: createdAt,
 					updated_at: createdAt,
-				} as Job
+				} as Job,
 			];
 
 			expect(jobService.getAll(input)).resolves.toEqual(expected);
 			expect(jobRepository.find).toBeCalledWith({
 				where: {},
-				order: {}
+				order: {},
 			});
 		});
 
 		it('successfully find all job with options', async () => {
-
 			const input = {
 				category: 'dev',
 				orderBy: 'id',
-				order: 'ASC'
+				order: 'ASC',
 			};
 			const expected = [
 				{
@@ -232,7 +313,7 @@ describe('JobService', () => {
 					candidate_id: 1,
 					created_at: createdAt,
 					updated_at: createdAt,
-				} as Job
+				} as Job,
 			];
 
 			expect(jobService.getAll(input)).resolves.toEqual(expected);
@@ -241,8 +322,8 @@ describe('JobService', () => {
 					category: input.category,
 				},
 				order: {
-					[input.orderBy]: input.order
-				}
+					[input.orderBy]: input.order,
+				},
 			});
 		});
 	});
@@ -265,7 +346,6 @@ describe('JobService', () => {
 		});
 
 		it('successfully find job', async () => {
-
 			const input = 1;
 			const expected = {
 				id: 1,
@@ -283,6 +363,46 @@ describe('JobService', () => {
 			expect(jobRepository.findOne).toBeCalledWith({
 				where: { id: input },
 				relations: ['candidate'],
+			});
+		});
+	});
+
+	describe('removeById', () => {
+		const DATABASE_JOB = {
+			id: 1,
+			name: 'me contrata',
+			price: 100,
+			description: 'descrição',
+			category: 'dev',
+			status: 'aberta',
+			candidate_id: 1,
+			created_at: new Date('2023-10-13'),
+			updated_at: new Date('2023-10-13'),
+		}
+
+		beforeEach(() => {
+			jest.spyOn(jobRepository, 'findOne').mockResolvedValue(DATABASE_JOB as Job);
+			jest.spyOn(jobRepository, 'remove').mockResolvedValue(DATABASE_JOB as Job);
+		});
+
+		it('successfully delete job', async () => {
+			const input = 1;
+
+			expect(jobService.removeById(input)).resolves.toBeUndefined();
+			expect(jobRepository.findOne).toBeCalledWith({
+				where: { id: input },
+			});
+		});
+
+		it('erroed delete job', async () => {
+			const input = 1;
+			const expected = new NotFoundException('Job não encontrado');
+
+			jest.spyOn(jobRepository, 'findOne').mockResolvedValue(null);
+
+			expect(jobService.removeById(input)).rejects.toThrowError(expected);
+			expect(jobRepository.findOne).toBeCalledWith({
+				where: { id: input },
 			});
 		});
 	});

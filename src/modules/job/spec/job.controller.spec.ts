@@ -15,8 +15,10 @@ describe('JobController', () => {
 					provide: JobService,
 					useValue: {
 						create: jest.fn(),
+						update: jest.fn(),
 						getAll: jest.fn(),
 						getOneById: jest.fn(),
+						removeById: jest.fn()
 					},
 				},
 			],
@@ -66,6 +68,43 @@ describe('JobController', () => {
 
 			expect(jobController.create(input)).resolves.toEqual(expected);
 			expect(jobService.create).toBeCalledWith(input);
+		});
+	});
+
+	describe('update', () => {
+		const createdAt = new Date('2023-10-13');
+		const updateAt = new Date('2023-10-14');
+
+		beforeEach(() => {
+			jest.spyOn(jobService, 'update').mockImplementation((_, object) => {
+				return Promise.resolve({
+					...object,
+					id: 1,
+					created_at: createdAt,
+					updated_at: updateAt,
+				} as Job);
+			});
+		});
+
+		it('successfully updating job', async () => {
+			const firstInput = 1
+			const secondInput = {
+				name: 'me contrata',
+				price: 100,
+				description: 'descrição',
+				category: 'dev',
+				status: 'aberta',
+				candidate_id: 1,
+			};
+			const expected = {
+				...secondInput,
+				id: 1,
+				created_at: createdAt,
+				updated_at: updateAt,
+			};
+
+			expect(jobController.update(firstInput, secondInput)).resolves.toEqual(expected);
+			expect(jobService.update).toBeCalledWith(firstInput, secondInput);
 		});
 	});
 
@@ -164,6 +203,20 @@ describe('JobController', () => {
 
 			expect(jobController.getOne(input)).resolves.toEqual(expected);
 			expect(jobService.getOneById).toBeCalledWith(input);
+		});
+	});
+
+	describe('removeById', () => {
+
+		beforeEach(() => {
+			jest.spyOn(jobService, 'removeById').mockResolvedValue(undefined);
+		});
+
+		it('successfully delete job', async () => {
+			const input = 1;
+
+			expect(jobController.delete(input)).resolves.toBeUndefined();
+			expect(jobService.removeById).toBeCalledWith(input);
 		});
 	});
 });
